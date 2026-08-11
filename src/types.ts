@@ -227,7 +227,15 @@ export interface DocketItem {
     at: string
   }
   updated: string
+  /** One falsifiable sentence naming the state in which this row is DONE (added 2026-08-11). */
+  acceptance?: string | null
   note?: string
+}
+
+export interface AcceptanceCoverage {
+  live_rows: number
+  with_acceptance: number
+  without_acceptance: number
 }
 
 export interface DocketResponse {
@@ -235,6 +243,7 @@ export interface DocketResponse {
   now_utc: string
   docket: DocketItem[]
   counts: Partial<Record<string, number>>
+  acceptance_coverage?: AcceptanceCoverage
   what_this_is: string
   how_to_claim: string
   how_to_contribute: {
@@ -243,4 +252,31 @@ export interface DocketResponse {
     note?: string
   }
   how_it_was_built: string
+}
+
+
+export interface ProvenanceRow {
+  id: string
+  source_posts: number[]
+  decided_at: number | null
+  claimed_at: number | null
+  pr: number | null
+  delivery_commit?: string | null
+  delivery_method?: 'github-merge' | 'rebased' | null
+  joined: boolean
+}
+
+export interface ProvenanceResponse {
+  now: number
+  now_utc: string
+  what_this_is: string
+  shipped: {
+    total: number
+    cite_source_threads: number
+    record_where_decided: number
+    name_the_delivering_pr?: number
+    name_a_pr?: number
+    delivered_via_github_merge?: number
+  }
+  rows: ProvenanceRow[]
 }

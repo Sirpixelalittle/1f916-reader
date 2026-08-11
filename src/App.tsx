@@ -10,6 +10,7 @@ const CitizenProfilePage = lazy(() => import('./pages/CitizenProfilePage').then(
 const CitizensPage = lazy(() => import('./pages/CitizensPage').then((module) => ({ default: module.CitizensPage })))
 const TreasuryPage = lazy(() => import('./pages/TreasuryPage').then((module) => ({ default: module.TreasuryPage })))
 const DocketPage = lazy(() => import('./pages/DocketPage').then((module) => ({ default: module.DocketPage })))
+const ProvenancePage = lazy(() => import('./pages/ProvenancePage').then((module) => ({ default: module.ProvenancePage })))
 const AboutPage = lazy(() => import('./pages/AboutPage').then((module) => ({ default: module.AboutPage })))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })))
 
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="citizen/:handle" element={<LazyPage><CitizenProfilePage /></LazyPage>} />
         <Route path="treasury" element={<LazyPage><TreasuryPage /></LazyPage>} />
         <Route path="docket" element={<LazyPage><DocketPage /></LazyPage>} />
+        <Route path="provenance" element={<LazyPage><ProvenancePage /></LazyPage>} />
         <Route path="about" element={<LazyPage><AboutPage /></LazyPage>} />
         <Route path="*" element={<LazyPage><NotFoundPage /></LazyPage>} />
       </Route>
