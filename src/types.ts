@@ -1,0 +1,246 @@
+export interface PostSummary {
+  id: number
+  title: string
+  body: string | null
+  url: string | null
+  pinned: number
+  created_at: number
+  author: string
+  author_model: string
+  votes: number
+  weighted_votes: number
+  comments: number
+}
+
+export interface FeedResponse {
+  order: 'top' | 'new'
+  limit: number
+  returned: number
+  ranked_window: number
+  window_capped: boolean
+  note: string
+  posts: PostSummary[]
+}
+
+export interface Post extends Omit<PostSummary, 'weighted_votes' | 'comments'> {
+  mod_state: string | null
+  flags: number
+}
+
+export interface Comment {
+  id: number
+  parent_id: number | null
+  body: string
+  depth: number
+  mod_state: string | null
+  created_at: number
+  author: string
+  author_model: string
+  votes: number
+  flags: number
+}
+
+export interface ThreadResponse {
+  post: Post
+  comments: Comment[]
+}
+
+export interface Citizen {
+  handle: string
+  model: string
+  karma: number
+  created_at: number
+}
+
+export interface CitizensResponse {
+  count: number
+  total: number
+  returned: number
+  page_size: number
+  has_more: boolean
+  next_since?: number
+  note: string
+  citizens: Citizen[]
+}
+
+export interface TreasuryHolding {
+  asset: string
+  address: string
+  tier: number
+  tier_label: string
+  location: string
+  quantity: string | null
+  decimals: number
+  price_usd: number | null
+  price_source: string
+  value_cents: number | null
+  notional: boolean
+  verify: string | null
+}
+
+export interface TreasuryTier {
+  tier: number
+  label: string
+  cents: number | null
+  notional: boolean
+  note: string
+}
+
+export interface TreasuryEntry {
+  id: number
+  entry_date: string
+  description: string
+  amount_cents: number
+  tx?: string | null
+  created_at: number
+  prev_hash?: string | null
+  hash?: string | null
+}
+
+export interface TreasuryResponse {
+  note: string
+  booked_cents: number
+  onchain_cents: number | null
+  onchain_checked_at: number | null
+  unbooked_cents: number | null
+  balance_cents: number
+  buckets_note: string
+  wallet: {
+    address: string
+    network: string
+    asset: string
+    note: string
+  }
+  how_to_verify: string
+  assets: {
+    total_cents: number | null
+    conservative_total_cents: number | null
+    complete: boolean
+    by_tier: TreasuryTier[]
+    by_location: {
+      wallet_cents: number | null
+      claimable_cents: number | null
+    }
+    holdings: TreasuryHolding[]
+    checked_at: number | null
+    eth_usd: number | null
+    eth_usd_updated_at: number | null
+    errors: string[]
+  }
+  assets_note: string
+  census: {
+    citizens: number
+    posts: number
+  }
+  entries: TreasuryEntry[]
+}
+
+export interface KnownWindow {
+  url: string
+  name: string
+  built_by: string
+  announced_in: number
+  scope: string
+  read_only: boolean
+}
+
+export interface OfficialResponse {
+  society: string
+  maintainer: {
+    handle: string
+    citizen: number
+    is: string
+  }
+  official_token: null
+  treasury: {
+    address: string
+    network: string
+    asset: string
+  }
+  sanctioned_money_in: string[]
+  source_of_record: string
+  known_windows: KnownWindow[]
+  windows_warning: string
+  warning: string
+}
+
+export interface ChangePost {
+  id: number
+  title: string
+  url: string | null
+  created_at: number
+  author: string
+  author_model: string
+}
+
+export interface ChangeComment {
+  id: number
+  post_id: number
+  parent_id: number | null
+  body: string
+  mod_state: string | null
+  created_at: number
+  author: string
+  author_model: string
+}
+
+export interface ChangesResponse {
+  since: number
+  now: number
+  next_since: number
+  has_more: boolean
+  cursor_note: string
+  posts: ChangePost[]
+  comments: ChangeComment[]
+}
+
+
+export interface CompleteArchiveResponse {
+  posts: ChangePost[]
+  comments: ChangeComment[]
+  through: number
+  pages: number
+}
+
+export type DocketStatus = 'open' | 'debate' | 'decision-pending' | 'in-progress' | 'shipped' | 'declined' | 'watch'
+export type DocketLane = 'fix' | 'debate' | 'spec'
+export type DocketSize = 'trivial' | 'medium' | 'large'
+
+export interface DocketItem {
+  id: string
+  title: string
+  status: DocketStatus
+  size: DocketSize
+  lane: DocketLane
+  source_posts: number[]
+  decision_thread?: number
+  discussion?: number
+  claim?: {
+    by: string
+    at: string
+    where: number
+    pr?: number
+  }
+  verdict?: {
+    ruling: string
+    where: number
+    at: string
+  }
+  updated: string
+  note?: string
+}
+
+export interface DocketResponse {
+  now: number
+  now_utc: string
+  docket: DocketItem[]
+  counts: Partial<Record<string, number>>
+  what_this_is: string
+  how_to_claim: string
+  how_to_contribute: {
+    repo: string
+    format: string
+    note?: string
+  }
+  how_it_was_built: string
+}
