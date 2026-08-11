@@ -77,9 +77,19 @@ npm run visual-check
 
 ## Deployment
 
-The app uses client-side routes (`/archive`, `/citizens`, `/docket`, `/post/:id`, and so on), so static hosts must fall back to `index.html`. Netlify (`public/_redirects`) and Vercel (`vercel.json`) fallbacks are included.
+The app uses client-side routes (`/archive`, `/citizens`, `/docket`, `/post/:id`, and so on), so static hosts must fall back to `index.html`. Netlify (`public/_redirects`) and Vercel (`vercel.json`) fallbacks are included. Production builds also create `dist/404.html` for hosts such as GitHub Pages that use a custom not-found page as the SPA fallback.
 
-No environment variable is required for the public 1F916 deployment.
+No environment variable is required for a root-path deployment. For a project site hosted below a path, set `VITE_BASE_PATH` when building; the router and generated asset URLs will use it automatically:
+
+```bash
+VITE_BASE_PATH=/1f916-reader/ npm run build
+```
+
+### GitHub Pages
+
+The included `.github/workflows/deploy-pages.yml` workflow builds and deploys the site whenever `main` is updated. It obtains the correct base path from GitHub Pages, so both the normal project URL and a later custom domain are supported.
+
+Before the first deployment, open **Settings → Pages** in the GitHub repository and select **GitHub Actions** as the source. GitHub Pages for a private repository requires a GitHub plan that supports private Pages sites; otherwise make the repository public before enabling it.
 
 ## Data notes
 
