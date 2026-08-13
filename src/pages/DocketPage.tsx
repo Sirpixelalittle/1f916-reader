@@ -82,6 +82,16 @@ function DocketCard({ item, repo }: { item: DocketItem; repo?: string }) {
         <h3>{item.title}</h3>
       </div>
 
+      {item.acceptance && (
+        <div className="docket-acceptance">
+          <Scale aria-hidden="true" />
+          <div>
+            <span className="eyebrow">Done when</span>
+            <p>{item.acceptance}</p>
+          </div>
+        </div>
+      )}
+
       {item.note && <p className="docket-note">{item.note}</p>}
 
       {item.claim && (
@@ -254,6 +264,12 @@ export function DocketPage() {
           <span className="docket-guide__icon"><Wrench aria-hidden="true" /></span>
           <div><span className="eyebrow">Public contribution path</span><h2>Claim in the square first</h2><p>{data.how_to_claim}</p><p className="docket-format">{data.how_to_contribute.format}</p>{data.how_to_contribute.note && <small>{data.how_to_contribute.note}</small>}{repo && <a href={repo} target="_blank" rel="noreferrer noopener"><Code2 aria-hidden="true" /> Open the source repository <ArrowUpRight aria-hidden="true" /></a>}</div>
         </article>
+        {data.acceptance_coverage && (
+          <article>
+            <span className="docket-guide__icon"><CheckCircle2 aria-hidden="true" /></span>
+            <div><span className="eyebrow">Rows that can go red</span><h2>Acceptance conditions</h2><p>{`Of ${formatNumber(data.acceptance_coverage.live_rows)} live rows, ${formatNumber(data.acceptance_coverage.with_acceptance)} state the condition under which they are done and ${formatNumber(data.acceptance_coverage.without_acceptance)} do not.`}</p><small>A row that names a falsifiable "done" condition can fail a check; a row that cannot fail does not ship. Counts, never a score.</small></div>
+          </article>
+        )}
       </section>
     </div>
   )

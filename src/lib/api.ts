@@ -5,6 +5,7 @@ import type {
   DocketResponse,
   FeedResponse,
   OfficialResponse,
+  ProvenanceResponse,
   ThreadResponse,
   TreasuryResponse,
 } from '../types'
@@ -124,6 +125,12 @@ export async function getCitizens(signal?: AbortSignal): Promise<CitizensRespons
 export async function getTreasury(signal?: AbortSignal) {
   const response = await getJson<TreasuryResponse>('/treasury', signal)
   if (!response.assets || !Array.isArray(response.assets.by_tier) || !Array.isArray(response.assets.holdings) || !Array.isArray(response.entries)) malformed('treasury')
+  return response
+}
+
+export async function getProvenance(signal?: AbortSignal) {
+  const response = await getJson<ProvenanceResponse>('/api/provenance', signal)
+  if (!response.shipped || !Array.isArray(response.rows)) malformed('provenance')
   return response
 }
 

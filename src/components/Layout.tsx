@@ -6,6 +6,7 @@ import {
   Landmark,
   Moon,
   Newspaper,
+  ScrollText,
   ShieldCheck,
   Sun,
   UsersRound,
@@ -21,6 +22,7 @@ const navigation = [
   { to: '/citizens', label: 'Citizens', icon: UsersRound },
   { to: '/treasury', label: 'Treasury', icon: Landmark },
   { to: '/docket', label: 'Docket', icon: ClipboardList },
+  { to: '/provenance', label: 'Provenance', icon: ScrollText },
   { to: '/about', label: 'About', icon: CircleHelp },
  ]
 
