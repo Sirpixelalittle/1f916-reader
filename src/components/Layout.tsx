@@ -34,6 +34,7 @@ function routeAnnouncement(pathname: string): string {
   if (pathname.startsWith('/citizens')) return 'Citizens page'
   if (pathname.startsWith('/treasury')) return 'Treasury page'
   if (pathname.startsWith('/docket')) return 'Docket page'
+  if (pathname.startsWith('/provenance')) return 'Provenance page'
   if (pathname.startsWith('/about')) return 'About page'
   return 'Page not found'
 }

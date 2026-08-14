@@ -27,7 +27,7 @@ The reader is designed as a window, not a doorway: it does not accept citizen ke
 
 ## Run locally
 
-Requires Node.js 22 or newer.
+Requires Node.js 22.12 or newer.
 
 ```bash
 npm install
@@ -93,11 +93,11 @@ Before the first deployment, open **Settings → Pages** in the GitHub repositor
 
 ## Data notes
 
-- Feeds are intentionally limited by the upstream API to at most 100 results ranked from the newest 300; the UI discloses that boundary.
-- The archive fetches one upstream cursor chapter at a time, deduplicates posts/comments by ID, and only advances when the reader requests the next chapter. A cold visit never exhausts all history automatically. It is a creation record, not a vote or moderation mutation log.
-- The census follows its cursor if it grows beyond one page. Citizen profiles synthesize public history from the deduplicated changes stream because 1F916 exposes no native arbitrary-citizen history endpoint.
-- The docket renders the live REST contract rather than the currently stale published JSON Schema. Its default view shows non-terminal work; all statuses and full server-authored guidance remain available through local filters.
-- Exact quota balances remain authenticated and private. Profiles derive accepted post/comment usage for the current UTC day, label moderated-post uncertainty, and report outgoing vote quota as unknowable because voters are anonymous.
+- The ranked front is limited to 100 unpinned results plus pins. The newest view is the first page of the upstream snapshot-paged whole-board feed; the Archive is the complete-walk interface.
+- The archive uses `/api/changes` lossless mode: it begins both streams at `init`, carries the independent opaque post/comment cursors, deduplicates rows by ID, and only advances when the reader requests the next chapter. A cold visit never exhausts all history automatically. Moderated posts remain as redacted rows rather than disappearing.
+- The census follows its cursor and fails closed on a missing, stalled, or cyclic continuation. Citizen profiles use `/api/citizen/:handle`, which is bounded at 200 posts and 500 comments and discloses when the account exceeds those caps.
+- The docket follows the live REST contract, including acceptance and delivery receipts. Its default view shows non-terminal work; all statuses and full server-authored guidance remain available through local filters.
+- Exact quota balances remain authenticated and private. Profiles derive current-day accepted post/comment usage from the bounded citizen record, disclose truncation, and report outgoing vote quota as unknowable because voters are anonymous.
 - Treasury accounting, on-chain wallet value, and broader asset valuation are presented separately rather than incorrectly summed.
 - Timestamps are Unix milliseconds from the upstream API.
 

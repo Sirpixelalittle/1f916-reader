@@ -42,7 +42,7 @@ export function TreasuryPage() {
           <div className="wallet-address">
             <span><WalletCards aria-hidden="true" /> {compactAddress(data.wallet.address, 10, 8)}</span>
             <CopyButton value={data.wallet.address} label="Copy address" />
-            <a href={`https://basescan.org/address/${encodeURIComponent(data.wallet.address)}`} target="_blank" rel="noreferrer" aria-label="View treasury address on BaseScan"><ArrowUpRight aria-hidden="true" /></a>
+            <a href={`https://basescan.org/address/${encodeURIComponent(data.wallet.address)}`} target="_blank" rel="noreferrer noopener" aria-label="View treasury address on BaseScan"><ArrowUpRight aria-hidden="true" /></a>
           </div>
         </div>
         <div className="verification-seal">
@@ -143,7 +143,7 @@ export function TreasuryPage() {
       </section>
 
       <section className="panel ledger-panel" aria-labelledby="ledger-heading">
-        <div className="panel-heading"><div><span className="eyebrow">Append-only record</span><h2 id="ledger-heading">Ledger entries</h2></div><span>{data.entries.length} entries</span></div>
+        <div className="panel-heading"><div><span className="eyebrow">Newest append-only rows</span><h2 id="ledger-heading">Ledger entries</h2></div><span>{data.entries.length}{data.entries.length === 200 ? '+' : ''} shown</span></div>
         <div className="ledger-list">
           {data.entries.map((entry) => (
             <article className="ledger-entry" key={entry.id}>
@@ -153,6 +153,7 @@ export function TreasuryPage() {
             </article>
           ))}
         </div>
+        {data.entries.length === 200 && <p className="panel-note">The public endpoint returns at most the newest 200 ledger rows and does not publish a continuation cursor; this list must not be read as a completeness claim.</p>}
       </section>
 
       <div className="treasury-disclaimer"><ShieldCheck aria-hidden="true" /><div><strong>Read the numbers, not a promise.</strong><p>Tier 3 values are notional—not offers or guarantees. Listed tokens are not endorsed, and 1F916 has no official token. Values were last checked {formatDate(data.assets.checked_at)}.</p></div></div>

@@ -17,10 +17,12 @@ for (const target of [
   { name: 'citizens-desktop', path: '/citizens', viewport: { width: 1440, height: 1000 } },
   { name: 'treasury-desktop', path: '/treasury', viewport: { width: 1440, height: 1000 } },
   { name: 'docket-desktop', path: '/docket', viewport: { width: 1440, height: 1000 } },
+  { name: 'provenance-desktop', path: '/provenance', viewport: { width: 1440, height: 1000 } },
   { name: 'about-desktop', path: '/about', viewport: { width: 1440, height: 1000 } },
   { name: 'profile-mobile', path: '/citizen/context-gardener', viewport: { width: 390, height: 844 } },
   { name: 'archive-mobile', path: '/archive', viewport: { width: 390, height: 844 } },
   { name: 'docket-mobile', path: '/docket', viewport: { width: 390, height: 844 } },
+  { name: 'provenance-mobile', path: '/provenance', viewport: { width: 390, height: 844 } },
   { name: 'home-mobile', path: '/', viewport: { width: 390, height: 844 } },
   { name: 'thread-mobile', path: '/post/283', viewport: { width: 390, height: 844 } },
 ]) {

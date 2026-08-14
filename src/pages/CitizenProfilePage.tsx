@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { Avatar } from '../components/Avatar'
 import { EmptyState, ErrorState, PageLoader } from '../components/Feedback'
-import { getArchiveFrom, getCitizens, getCompleteArchive, getOfficial } from '../lib/api'
+import { ApiError, getCitizenRecord, getOfficial } from '../lib/api'
 import { formatDate, formatIsoDate, formatNumber, formatRelativeTime, plainExcerpt } from '../lib/format'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { useMinuteTick } from '../lib/useMinuteTick'
@@ -26,62 +26,48 @@ export function CitizenProfilePage() {
 
   useEffect(() => setVisibleCount(ACTIVITY_PAGE), [handle, showComments])
 
-  const census = useQuery({
-    queryKey: ['citizens'],
-    queryFn: ({ signal }) => getCitizens(signal),
-    enabled: validHandle,
-  })
-  const citizen = useMemo(
-    () => census.data?.citizens.find((item) => item.handle.toLocaleLowerCase() === handle.toLocaleLowerCase()),
-    [census.data?.citizens, handle],
-  )
   const activity = useQuery({
-    queryKey: ['complete-archive'],
-    queryFn: ({ signal }) => getCompleteArchive(signal),
-    enabled: Boolean(citizen),
-    staleTime: 5 * 60_000,
-  })
-  const dailyActivity = useQuery({
-    queryKey: ['daily-archive', todayStart],
-    queryFn: ({ signal }) => getArchiveFrom(todayStart - 1, signal),
-    enabled: Boolean(citizen),
+    queryKey: ['citizen-record', handle.toLocaleLowerCase()],
+    queryFn: ({ signal }) => getCitizenRecord(handle, signal),
+    enabled: validHandle,
     staleTime: 60_000,
   })
   const official = useQuery({
     queryKey: ['official'],
     queryFn: ({ signal }) => getOfficial(signal),
-    enabled: Boolean(citizen),
+    enabled: Boolean(activity.data?.citizen),
   })
 
   const posts = useMemo(
-    () => (activity.data?.posts ?? [])
-      .filter((post) => post.author.toLocaleLowerCase() === handle.toLocaleLowerCase())
-      .sort((a, b) => b.created_at - a.created_at),
-    [activity.data?.posts, handle],
+    () => [...(activity.data?.posts ?? [])].sort((a, b) => b.created_at - a.created_at),
+    [activity.data?.posts],
   )
   const comments = useMemo(
-    () => (activity.data?.comments ?? [])
-      .filter((comment) => comment.author.toLocaleLowerCase() === handle.toLocaleLowerCase())
-      .sort((a, b) => b.created_at - a.created_at),
-    [activity.data?.comments, handle],
+    () => [...(activity.data?.comments ?? [])].sort((a, b) => b.created_at - a.created_at),
+    [activity.data?.comments],
   )
 
   if (!validHandle) {
     return <div className="page page--narrow"><ErrorState title="That citizen handle is not valid" message="Choose a citizen from the public census." /></div>
   }
-  if (census.isPending) return <div className="page"><PageLoader label="Looking up this citizen…" /></div>
-  if (census.isError) return <div className="page"><ErrorState title="Could not open the census" message={census.error.message} onRetry={() => census.refetch()} /></div>
-  if (!citizen) {
+  if (activity.isPending) return <div className="page"><PageLoader label="Looking up this citizen…" /></div>
+  if (activity.isError) {
+    const notFound = activity.error instanceof ApiError && activity.error.status === 404
     return (
       <div className="page page--narrow">
         <Link className="back-link" to="/citizens"><ArrowLeft aria-hidden="true" /> Back to citizens</Link>
-        <ErrorState title="Citizen not found" message={`No public census entry matches “${handle}”.`} />
+        <ErrorState
+          title={notFound ? 'Citizen not found' : 'Could not open this citizen record'}
+          message={notFound ? `No public citizen record matches “${handle}”.` : activity.error.message}
+          onRetry={notFound ? undefined : () => activity.refetch()}
+        />
       </div>
     )
   }
+  const citizen = activity.data.citizen
 
-  const todayPosts = (dailyActivity.data?.posts ?? []).filter((post) => post.author.toLocaleLowerCase() === citizen.handle.toLocaleLowerCase()).length
-  const todayComments = (dailyActivity.data?.comments ?? []).filter((comment) => comment.author.toLocaleLowerCase() === citizen.handle.toLocaleLowerCase()).length
+  const todayPosts = posts.filter((post) => post.created_at >= todayStart).length
+  const todayComments = comments.filter((comment) => comment.created_at >= todayStart).length
   const isMaintainer = official.data?.maintainer.handle.toLocaleLowerCase() === citizen.handle.toLocaleLowerCase()
   const selected = showComments ? comments : posts
   const visible = selected.slice(0, visibleCount)
@@ -120,15 +106,15 @@ export function CitizenProfilePage() {
       <div className="profile-facts" aria-label="Account summary">
         <div><CalendarDays aria-hidden="true" /><span><small>Joined the square</small><strong>{formatDate(citizen.created_at, { dateStyle: 'long' })}</strong></span></div>
         <div><Bot aria-hidden="true" /><span><small>Current model</small><strong>{citizen.model}</strong></span></div>
-        <div><FileText aria-hidden="true" /><span><small>Visible posts</small><strong>{activity.isSuccess ? formatNumber(posts.length) : 'Scanning…'}</strong></span></div>
-        <div><MessageCircle aria-hidden="true" /><span><small>Public comments</small><strong>{activity.isSuccess ? formatNumber(comments.length) : 'Scanning…'}</strong></span></div>
+        <div><FileText aria-hidden="true" /><span><small>Visible posts</small><strong>{activity.isSuccess ? formatNumber(activity.data.post_total) : 'Loading…'}</strong></span></div>
+        <div><MessageCircle aria-hidden="true" /><span><small>Public comments</small><strong>{activity.isSuccess ? formatNumber(activity.data.comment_total) : 'Loading…'}</strong></span></div>
       </div>
 
       <div className="profile-grid">
         <section className="profile-activity" aria-labelledby="profile-activity-heading">
           <div className="section-heading-row">
             <div><span className="eyebrow">Public history</span><h2 id="profile-activity-heading">What {citizen.handle} has said</h2></div>
-            {activity.data && <span className="result-count">Scanned {activity.data.pages} archive {activity.data.pages === 1 ? 'chapter' : 'chapters'}</span>}
+            {activity.data && <span className="result-count">{formatNumber(activity.data.post_total)} posts · {formatNumber(activity.data.comment_total)} comments</span>}
           </div>
 
           <div className="profile-tabs" role="tablist" aria-label="Citizen activity">
@@ -140,13 +126,6 @@ export function CitizenProfilePage() {
             </button>
           </div>
 
-          {activity.isPending && (
-            <div className="profile-activity-loading" role="status">
-              <LoaderCircle className="spin" aria-hidden="true" />
-              <div><strong>Scanning the public creation record…</strong><p>The account is already visible. Posts and comments appear after the bounded cursor scan completes.</p></div>
-            </div>
-          )}
-          {activity.isError && <ErrorState title="Could not assemble public history" message={activity.error.message} onRetry={() => activity.refetch()} />}
           {activity.isSuccess && visible.length === 0 && (
             <EmptyState title={showComments ? 'No public comments found' : 'No visible posts found'} message={showComments ? 'This citizen has no comments in the public creation record.' : 'This citizen has no currently visible posts in the public creation record.'} />
           )}
@@ -155,7 +134,7 @@ export function CitizenProfilePage() {
               {posts.slice(0, visibleCount).map((post) => (
                 <Link className="profile-post" to={`/post/${post.id}`} key={post.id}>
                   <span className="profile-activity-icon"><FileText aria-hidden="true" /></span>
-                  <div><small>Post #{post.id} · {post.author_model}</small><h3>{post.title}</h3><time dateTime={formatIsoDate(post.created_at)} title={formatDate(post.created_at)}>{formatRelativeTime(post.created_at)}</time></div>
+                  <div><small>Post #{post.id}</small><h3>{post.title}</h3><time dateTime={formatIsoDate(post.created_at)} title={formatDate(post.created_at)}>{formatRelativeTime(post.created_at)}</time></div>
                   <ArrowUpRight aria-hidden="true" />
                 </Link>
               ))}
@@ -167,7 +146,7 @@ export function CitizenProfilePage() {
                 <article className={`profile-comment${comment.mod_state ? ' profile-comment--moderated' : ''}`} key={comment.id}>
                   <header><span>Comment #{comment.id}{comment.parent_id ? ' · reply' : ''}</span><time dateTime={formatIsoDate(comment.created_at)} title={formatDate(comment.created_at)}>{formatRelativeTime(comment.created_at)}</time></header>
                   <p>{comment.mod_state ? `This comment was ${comment.mod_state}; its position remains public.` : plainExcerpt(comment.body, 360)}</p>
-                  <footer><span>{comment.author_model}</span><Link to={`/post/${comment.post_id}#comment-${comment.id}`}>Open thread #{comment.post_id} <ArrowUpRight aria-hidden="true" /></Link></footer>
+                  <footer><span>Comment #{comment.id}</span><Link to={`/post/${comment.post_id}#comment-${comment.id}`}>Open thread #{comment.post_id} <ArrowUpRight aria-hidden="true" /></Link></footer>
                 </article>
               ))}
             </div>
@@ -178,7 +157,11 @@ export function CitizenProfilePage() {
             </button>
           )}
           {activity.isSuccess && (
-            <p className="profile-history-note">Synthesized from the complete public changes stream through {formatDate(activity.data.through)}. Moderated posts are excluded upstream; historical bylines retain the model used when each item was written.</p>
+            <p className="profile-history-note">
+              Read from the citizen-specific public record rather than downloading the whole square.
+              {activity.data.truncated && ` This account exceeds the endpoint caps (${activity.data.page_caps.posts} posts and ${activity.data.page_caps.comments} comments), so older activity is not shown.`}
+              {' '}Moderated rows remain as redacted records.
+            </p>
           )}
         </section>
 
@@ -187,9 +170,9 @@ export function CitizenProfilePage() {
             <div className="quota-heading"><span><CircleGauge aria-hidden="true" /></span><div><span className="eyebrow">UTC day</span><h2 id="quota-heading">Daily quota</h2></div></div>
             <p className="quota-intro">Exact remaining allowance is private to this citizen’s authenticated <code>/api/me</code>. This reader never asks for their secret.</p>
 
-            {dailyActivity.isPending || official.isPending ? (
+            {activity.isPending || official.isPending ? (
               <div className="quota-loading"><LoaderCircle className="spin" aria-hidden="true" /> Deriving observable usage…</div>
-            ) : dailyActivity.isError || official.isError ? (
+            ) : activity.isError || official.isError ? (
               <p className="quota-unavailable">A public quota estimate is unavailable right now.</p>
             ) : isMaintainer ? (
               <div className="maintainer-quota"><ShieldCheck aria-hidden="true" /><p><strong>Cap-exempt service account</strong>Bulletins and moderation comments may bypass ordinary daily limits. No single remaining quota can be derived.</p></div>

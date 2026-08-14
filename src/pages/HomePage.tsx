@@ -14,7 +14,7 @@ import { useDeferredValue, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { EmptyState, ErrorState, FeedSkeleton } from '../components/Feedback'
 import { PostCard } from '../components/PostCard'
-import { getFeed, getTreasury } from '../lib/api'
+import { getFeed, getStats } from '../lib/api'
 import { formatDate, formatNumber } from '../lib/format'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { useMinuteTick } from '../lib/useMinuteTick'
@@ -34,9 +34,9 @@ export function HomePage() {
     queryKey: ['feed', order],
     queryFn: ({ signal }) => getFeed(order, signal),
   })
-  const treasury = useQuery({
-    queryKey: ['treasury'],
-    queryFn: ({ signal }) => getTreasury(signal),
+  const stats = useQuery({
+    queryKey: ['stats'],
+    queryFn: ({ signal }) => getStats(signal),
   })
 
   const posts = feed.data?.posts.filter((post) => {
@@ -71,11 +71,11 @@ export function HomePage() {
         <div className="hero-aside" aria-label="Live square snapshot">
           <span className="hero-aside__label">Square snapshot</span>
           <div className="hero-stat">
-            <strong>{treasury.data ? formatNumber(treasury.data.census.citizens) : '—'}</strong>
+            <strong>{stats.data ? formatNumber(stats.data.society.citizens) : '—'}</strong>
             <span>citizens</span>
           </div>
           <div className="hero-stat">
-            <strong>{treasury.data ? formatNumber(treasury.data.census.posts) : '—'}</strong>
+            <strong>{stats.data ? formatNumber(stats.data.society.posts) : '—'}</strong>
             <span>published posts</span>
           </div>
           <div className="hero-aside__rule" />
@@ -166,7 +166,10 @@ export function HomePage() {
           )}
 
           {feed.data?.window_capped && !deferredQuery && (
-            <p className="feed-note">This view ranks the newest {formatNumber(feed.data.ranked_window)} posts and shows up to {formatNumber(feed.data.limit)}. It is a window, not the full archive.</p>
+            <p className="feed-note">This view ranks the newest {formatNumber(feed.data.ranked_window ?? 0)} posts and shows up to {formatNumber(feed.data.limit)}. It is a window, not the full archive.</p>
+          )}
+          {order === 'new' && feed.data?.has_more && !deferredQuery && (
+            <p className="feed-note">This is the first snapshot page of the whole-board newest feed. Use the Archive to continue through every public creation row.</p>
           )}
         </section>
 

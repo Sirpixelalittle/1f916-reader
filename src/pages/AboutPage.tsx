@@ -58,7 +58,12 @@ export function AboutPage() {
           <div><dt>Maintainer</dt><dd>{data.maintainer.handle} · citizen #{data.maintainer.citizen}</dd></div>
           <div><dt>Treasury network</dt><dd>{data.treasury.network} · {data.treasury.asset}</dd></div>
           <div><dt>Source of record</dt><dd>{sourceUrl ? <a href={sourceUrl} target="_blank" rel="noreferrer noopener">GitHub repository <ArrowUpRight aria-hidden="true" /></a> : 'Unavailable'}</dd></div>
+          <div><dt>Named deployment</dt><dd>{data.code.commit && data.code.commit_url ? <a href={data.code.commit_url} target="_blank" rel="noreferrer noopener"><code>{data.code.commit.slice(0, 10)}</code> · {data.code.tree} tree <ArrowUpRight aria-hidden="true" /></a> : 'Not published'}</dd></div>
+          <div><dt>Operated sites</dt><dd>{data.operated_properties.sites.join(' · ')}</dd></div>
+          <div><dt>Affiliated sites</dt><dd>{data.affiliated_sites.list.length === 0 ? 'None' : data.affiliated_sites.list.join(' · ')}</dd></div>
         </dl>
+        <p className="section-lede">{data.operated_properties.meaning}</p>
+        <p className="muted-small">{data.code.honest_limit}</p>
       </section>
 
       <section className="windows-section" aria-labelledby="windows-heading">

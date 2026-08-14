@@ -4,7 +4,7 @@ import { useDeferredValue, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Avatar } from '../components/Avatar'
 import { EmptyState, ErrorState, PageLoader } from '../components/Feedback'
-import { getArchivePage } from '../lib/api'
+import { getArchivePage, initialArchiveCursor, nextArchiveCursor } from '../lib/api'
 import { formatDate, formatIsoDate, formatNumber, formatRelativeTime, plainExcerpt } from '../lib/format'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { useMinuteTick } from '../lib/useMinuteTick'
@@ -32,11 +32,8 @@ export function ArchivePage() {
   const archive = useInfiniteQuery({
     queryKey: ['archive'],
     queryFn: ({ pageParam, signal }) => getArchivePage(pageParam, signal),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      if (!lastPage.has_more || lastPage.next_since === lastPage.since) return undefined
-      return lastPage.next_since
-    },
+    initialPageParam: initialArchiveCursor(0),
+    getNextPageParam: nextArchiveCursor,
     staleTime: 5 * 60_000,
   })
 
@@ -69,8 +66,10 @@ export function ArchivePage() {
   const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE))
   const page = Math.min(requestedPage, totalPages)
   const visible = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-  const lastChapter = archive.data?.pages.at(-1)
-  const loadedThrough = lastChapter ? (lastChapter.has_more ? lastChapter.next_since : lastChapter.now) : null
+  const loadedThrough = useMemo(() => {
+    const timestamps = [...loaded.posts, ...loaded.comments].map((item) => item.created_at)
+    return timestamps.length > 0 ? Math.max(...timestamps) : null
+  }, [loaded.comments, loaded.posts])
 
   function update(values: Record<string, string | undefined>) {
     const next = new URLSearchParams(searchParams)
@@ -84,7 +83,7 @@ export function ArchivePage() {
   }
 
   if (archive.isPending) return <div className="page"><PageLoader label="Opening the first archive chapter…" /></div>
-  if (archive.isError) return <div className="page"><ErrorState title="Could not open the archive" message={archive.error.message} onRetry={() => archive.refetch()} /></div>
+  if (archive.isError && !archive.data) return <div className="page"><ErrorState title="Could not open the archive" message={archive.error.message} onRetry={() => archive.refetch()} /></div>
 
   let lastDate = ''
 
@@ -99,7 +98,7 @@ export function ArchivePage() {
         <div className="archive-stats">
           <div><FileText aria-hidden="true" /><strong>{formatNumber(loaded.posts.length)}{archive.hasNextPage ? '+' : ''}</strong><span>posts loaded</span></div>
           <div><MessageCircle aria-hidden="true" /><strong>{formatNumber(loaded.comments.length)}{archive.hasNextPage ? '+' : ''}</strong><span>comments loaded</span></div>
-          <small>{archive.data.pages.length} {archive.data.pages.length === 1 ? 'chapter' : 'chapters'} · through {formatDate(loadedThrough)}</small>
+          <small>{archive.data.pages.length} {archive.data.pages.length === 1 ? 'chapter' : 'chapters'} · latest timestamp seen {formatDate(loadedThrough)}</small>
         </div>
       </header>
 
@@ -182,12 +181,18 @@ export function ArchivePage() {
           </nav>
         )}
 
+        {archive.isFetchNextPageError && (
+          <div className="inline-warning" role="alert">
+            <span><strong>Could not load the next archive chapter.</strong>{archive.error.message} The history already loaded remains available.</span>
+          </div>
+        )}
+
         {archive.hasNextPage ? (
           <div className="archive-load-panel">
             <div><Clock3 aria-hidden="true" /><span><strong>More history remains.</strong>Load one bounded server chapter when you are ready; the page never downloads the whole archive on a cold visit.</span></div>
             <button className="button button--secondary" type="button" onClick={() => archive.fetchNextPage()} disabled={archive.isFetchingNextPage}>
               {archive.isFetchingNextPage ? <LoaderCircle className="spin" aria-hidden="true" /> : <Archive aria-hidden="true" />}
-              {archive.isFetchingNextPage ? 'Loading chapter…' : 'Load next chapter'}
+              {archive.isFetchingNextPage ? 'Loading chapter…' : archive.isFetchNextPageError ? 'Retry next chapter' : 'Load next chapter'}
             </button>
           </div>
         ) : (

@@ -162,7 +162,7 @@ export function ThreadPage() {
         <div className="comments-heading">
           <div>
             <span className="eyebrow">Public conversation</span>
-            <h2 id="comments-heading"><MessageCircle aria-hidden="true" /> {formatNumber(comments.length)} {comments.length === 1 ? 'comment' : 'comments'}</h2>
+            <h2 id="comments-heading"><MessageCircle aria-hidden="true" /> {formatNumber(thread.data.comments_total)} {thread.data.comments_total === 1 ? 'comment' : 'comments'}</h2>
           </div>
           {comments.length > 1 && (
             <label className="select-field">
@@ -174,9 +174,6 @@ export function ThreadPage() {
             </label>
           )}
         </div>
-        {comments.length >= 1000 && (
-          <div className="thread-cap-note"><ShieldAlert aria-hidden="true" /> This thread reached the public API’s 1,000-comment response cap; additional comments may exist.</div>
-        )}
         {comments.length === 0 ? (
           <div className="quiet-thread"><MessageCircle aria-hidden="true" /><h3>A quiet thread, for now.</h3><p>No public comments have been made.</p></div>
         ) : (

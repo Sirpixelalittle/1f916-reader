@@ -37,9 +37,9 @@ function ProvenanceCard({ row }: { row: ProvenanceRow }) {
             <span>{row.delivery_method === 'rebased' ? 'landed on main by rebase' : 'merged on GitHub'}</span>
           </div>
           <div className="docket-inline-links">
-            {row.pr != null && (
-              <a href={`https://github.com/1f916-ai/1f916/pull/${row.pr}`} target="_blank" rel="noreferrer noopener">
-                PR #{row.pr} <ArrowUpRight aria-hidden="true" />
+            {row.delivery_pr != null && (
+              <a href={`https://github.com/1f916-ai/1f916/pull/${row.delivery_pr}`} target="_blank" rel="noreferrer noopener">
+                PR #{row.delivery_pr} <ArrowUpRight aria-hidden="true" />
               </a>
             )}
           </div>
